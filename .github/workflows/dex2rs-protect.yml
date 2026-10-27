@@ -263,10 +263,47 @@ jobs:
           echo "--- filter.txt setelah perluasan ---"
           cat "$GITHUB_WORKSPACE/filter.txt"
 
+      # ROOT CAUSE RUN 40425997243 (dari log step 11 yang dikirim user):
+      #   env step Protect: ANDROID_NDK_HOME: (KOSONG)
+      #   dex2rs compile 3271 method sukses, lalu:
+      #     warning: ANDROID_NDK_HOME = "" doesn't match
+      #              ANDROID_NDK_ROOT = "/usr/local/lib/android/sdk/ndk/27.3.13750724"
+      #     error: Error detecting NDK version for path
+      #     error: No such file or directory (os error 2)
+      #     error: cargo ndk build failed with exit status: 1
+      #   Penyebab: step ini dulu mengeset env ANDROID_NDK_HOME:
+      #   ${{ env.ANDROID_NDK_HOME }}, yang nilainya KOSONG, sehingga
+      #   menimpa / memaksa cargo-ndk memakai path kosong, padahal runner
+      #   sudah punya ANDROID_NDK_ROOT yang valid. cargo-ndk mengutamakan
+      #   ANDROID_NDK_HOME (meski kosong) di atas ANDROID_NDK_ROOT.
+      #   FIX: HAPUS env ANDROID_NDK_HOME dari step ini (jangan set kosong),
+      #   dan di run: kalau HOME kosong, pakai ROOT dulu, baru fallback ke
+      #   $ANDROID_HOME/ndk/*. NDK 27.3 bawaan runner boleh dipakai, tidak
+      #   harus persis r27c dari setup-ndk, yang penting versinya terdeteksi.
       - name: Protect APK dengan dex2rs
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
+          echo "--- diagnostik sebelum protect ---"
+          which dex2rs cargo cargo-ndk java || true
+          echo "ANDROID_NDK_HOME=[$ANDROID_NDK_HOME]"
+          echo "ANDROID_NDK_ROOT=[$ANDROID_NDK_ROOT]"
+          echo "ANDROID_HOME=[$ANDROID_HOME]"
+          ls "$ANDROID_HOME/ndk" 2>/dev/null || true
+          export PATH="$HOME/.cargo/bin:$PATH"
+          if [ -z "$ANDROID_NDK_HOME" ] && [ -n "$ANDROID_NDK_ROOT" ]; then
+            ANDROID_NDK_HOME="$ANDROID_NDK_ROOT"
+            export ANDROID_NDK_HOME
+            echo "pakai ANDROID_NDK_ROOT sebagai ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          fi
+          if [ -z "$ANDROID_NDK_HOME" ] && [ -d "$ANDROID_HOME/ndk" ]; then
+            ANDROID_NDK_HOME="$(ls -d "$ANDROID_HOME"/ndk/* | head -n 1)"
+            export ANDROID_NDK_HOME
+            echo "fallback ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          fi
+          if [ -z "$ANDROID_NDK_HOME" ]; then
+            echo "ERROR: ANDROID_NDK_HOME kosong dan tidak ada NDK di ANDROID_NDK_ROOT / ANDROID_HOME/ndk" >&2
+            exit 1
+          fi
+          echo "filter rules: $(grep -c '^L' filter.txt || true)"
           dex2rs -i "$APK_PATH" \
             -o "$OUTPUT_NAME" \
             -f filter.txt \
