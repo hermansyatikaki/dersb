@@ -1,0 +1,309 @@
+# Dex2rs protect untuk Miku Moe
+#
+# Cara pakai:
+#   1. Copy file ini ke repo kamu di: .github/workflows/dex2rs-protect.yml
+#   2. Taruh APK input di root repo (nama default di bawah).
+#      Atau isi input apk_path saat menekan "Run workflow".
+#   3. Actions > Dex2rs Protect Miku Moe > Run workflow
+#   4. Download hasil dari Artifacts: Miku_Moe-protected-dex2rs
+#
+# Spesifikasi yang dipakai di sini (sesuai permintaan user 2026-10-27):
+#   - Protect SEMUA kelas dari miku.moe.app
+#     (filter: Lmiku/moe/app/.*;.*  -> 459 class-def di APK 3.7 yang dicek)
+#   - 2 arsitektur: arm64-v8a (64-bit) dan armeabi-v7a (32-bit)
+#   - Loader class custom: miku.solid.moe
+#   - Nama library: mikumoe  ->  lib/arm64-v8a/libmikumoe.so
+#                                  lib/armeabi-v7a/libmikumoe.so
+#     (satu nama lib, 2 file sesuai folder ABI, bukan 2 nama lib berbeda)
+#
+# PENTING - kenapa ada flag -k:
+#   APK ini aslinya sudah membawa 4 ABI (arm64-v8a, armeabi-v7a, x86, x86_64).
+#   Tanpa -k, dex2rs mengabaikan --abis dan memakai ABI bawaan APK.
+#   Dengan -k, dex2rs dipaksa build persis daftar di --abis.
+#
+# PENTING - signing:
+#   dex2rs men-sign output dengan debug keystore bawaan (embedded) kalau
+#   tidak diset keystore sendiri di dcc.cfg. Artinya APK hasil ini BISA
+#   di-install fresh, tapi TIDAK bisa update-install menimpa APK yang
+#   di-sign keystore rilis kamu. Kalau butuh update-install, re-sign
+#   output dengan keystore rilis kamu sendiri (zipalign + apksigner).
+#
+# Workflow ini AUTO-RUN tiap push ke main, plus bisa manual
+# (workflow_dispatch). Jadi sekali push workflow/APK baru, protect
+# langsung jalan tanpa perlu tekan Run workflow.
+# Catatan: di run hasil push, inputs.* itu kosong, jadi step pertama
+# di bawah mengisi APK_PATH / OUTPUT_NAME dari default kalau kosong.
+
+name: Dex2rs Protect Miku Moe
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      apk_path:
+        description: "Path APK input di repo (relatif ke root repo)"
+        required: true
+        default: "Miku_Moe_3.7_0_jq7i.apk"
+        type: string
+      output_name:
+        description: "Nama file APK hasil protect"
+        required: true
+        default: "Miku_Moe_3.7_protected.apk"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  protect:
+    name: Protect with dex2rs
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # NAMA FILE TIDAK HARUS Miku_Moe_3.7_0_jq7i.apk.
+      # Nama itu HANYA default, karena itu nama file yang pertama kali
+      # di-upload user. dex2rs peduli ISI APK (package/dex), bukan nama file.
+      # Logika di bawah, urut:
+      #   1. Kalau Run workflow manual dan apk_path diisi -> pakai itu.
+      #   2. Kalau push (inputs kosong) dan file default ada -> pakai default.
+      #   3. Kalau push dan file default TIDAK ada -> pakai APK *.apk pertama
+      #      di root repo (mis. update jadi Miku_Moe_3.8_....apk).
+      #      Jadi update aplikasi dengan nama file beda tetap auto-jalan,
+      #      tanpa harus rename file atau edit workflow.
+      #   Kalau tidak ada APK sama sekali di root, step ini gagal jelas.
+      - name: Tentukan path input/output (nama file bebas, auto-detect)
+        run: |
+          APK_PATH="${{ inputs.apk_path }}"
+          if [ -z "$APK_PATH" ]; then
+            if [ -f "Miku_Moe_3.7_0_jq7i.apk" ]; then
+              APK_PATH="Miku_Moe_3.7_0_jq7i.apk"
+            else
+              APK_PATH="$(ls *.apk 2>/dev/null | head -n 1 || true)"
+            fi
+          fi
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: tidak ada APK di root repo (cari default, lalu *.apk)" >&2
+            ls -la
+            exit 1
+          fi
+          OUTPUT_NAME="${{ inputs.output_name }}"
+          if [ -z "$OUTPUT_NAME" ]; then OUTPUT_NAME="Miku_Moe_3.7_protected.apk"; fi
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
+          echo "OUTPUT_NAME=$OUTPUT_NAME" >> "$GITHUB_ENV"
+          echo "APK_PATH=$APK_PATH OUTPUT_NAME=$OUTPUT_NAME"
+
+      - name: Cek APK input ada
+        run: |
+          ls -lh "$APK_PATH"
+          file "$APK_PATH"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
+      # PERBAIKAN 2026-10-27: run pertama gagal di step ini (exit 101, 19 detik).
+      # Penyebab paling kuat: `cargo install dex2rs` gagal karena crate
+      # dex2rs TIDAK ditemukan di crates.io (cek halaman crates.io = 404),
+      # padahal README menyebut cargo install. Jadi jangan andalkan crates.io
+      # untuk dex2rs: build langsung dari source repo yang sudah diverifikasi.
+      # Step dipisah supaya kalau gagal lagi, jelas step mana yang gagal.
+      - name: Install cargo-ndk
+        run: |
+          cargo --version
+          rustc --version
+          cargo install cargo-ndk
+          cargo ndk --version
+
+      - name: Build dex2rs dari source (bukan cargo install)
+        run: |
+          git clone https://github.com/rodroidmods/dex2rs.git dex2rs-src
+          cd dex2rs-src && cargo build --release
+          ls -lh target/release/dex2rs
+          ./target/release/dex2rs --help | head -n 40
+          echo "$GITHUB_WORKSPACE/dex2rs-src/target/release" >> "$GITHUB_PATH"
+
+      - name: Buat filter (semua kelas miku.moe.app)
+        run: |
+          cat > filter.txt << 'EOF'
+          # Semua method dari semua kelas di miku.moe.app
+          # Format dex2rs: full name = class descriptor + nama method + proto,
+          # dicocokkan sebagai regex (bukan harus full-match).
+          # Contoh yang kena: Lmiku/moe/app/MainActivity;onCreate(Landroid/os/Bundle;)V
+          Lmiku/moe/app/.*;.*
+          EOF
+          cat filter.txt
+
+      # TAMBAHAN 2026-10-27, DIPERBARUI 2026-10-27 (True Miku, OTOMATIS tiap run):
+      #   INTI PERMINTAAN USER: script protect harus OTOMATIS mencari string
+      #   di seluruh kode yang di luar miku.moe.app, lalu OTOMATIS memproteksi
+      #   kelas yang ada teks mikunya. Bukan daftar kelas hardcode.
+      #   ALASANNYA: tiap update aplikasi, nama kelas R8 PASTI BERUBAH.
+      #   Daftar 55 kelas dari APK 3.7 di bawah ini HANYA DOKUMENTASI hasil
+      #   bedah 3.7 — filter di run manapun TIDAK memakai daftar itu.
+      #   Step ini di tiap run me-dexdump APK INPUT run itu sendiri
+      #   (APK baru yang di-push / dipilih di workflow_dispatch), jadi kelas
+      #   baru hasil R8 build baru langsung ketemu tanpa edit script.
+      #   DEFINISI "True Miku" (yang dicari, sesuai konfirmasi user):
+      #     teks miku contoh: miku_... (miku_manga_*, miku_moe_*, miku_anime_*),
+      #     domain/url web user: *mikumoe* (anx.mikumoe.my.id, crash.mikumoe.my.id),
+      #     brand: Miku Moe, Miku Pink, MikuAja, MikuBrowse*, Miku01v, MIKU_*_AES,
+      #     package: miku.moe.app, JS video: __mikuVideo, thread: miku-update-io.
+      #     Implementasi di script: lower-case string, HAPUS semua "komiku",
+      #     kalau masih mengandung "miku" => True Miku. Ini otomatis:
+      #       - "miku_manga_settings" -> True (awalan miku_)
+      #       - "anx.mikumoe.my.id" -> True (domain mikumoe)
+      #       - "Miku Moe" / "Miku01v-..." -> True
+      #       - "komiku_org" / "Komiku Asia" / "cdnkomiku.xyz" -> BUKAN True
+      #         (setelah "komiku" dihapus, tidak tersisa "miku" lagi).
+      #     Jadi kelas yang HANYA pakai string Komiku TIDAK ditambahkan.
+      #   HASIL BEDAH APK 3.7 (dokumentasi saja, bukan hardcode):
+      #     - Tidak ada class-def bernama *miku* di luar Lmiku/moe/app/
+      #       (459 class-def miku semuanya di dalam).
+      #     - True Miku di luar: 47 string berbeda di 55 kelas (kebanyakan
+      #       top-level tanpa package hasil R8, mis. Lal2, Lcs0, Ltz3, Lwg0, Lzu1).
+      #     - Komiku-only di luar: 28 string di 18 kelas, TIDAK ditambahkan.
+      #     - Satu-satunya library penemu True Miku: androidx.room.f dengan
+      #       'miku_manga_room.db' (nama DB dilempar dari MangaDatabase) —
+      #       TIDAK ditambahkan, karena itu library, bukan kode app.
+      #   KELAS APA YANG DITAMBAHKAN: semua pemilik const-string True Miku
+      #   di luar miku.moe.app, KECUALI pemilik dari package library yang
+      #   dikenal (androidx, kotlin, com.google, okhttp3, org.jsoup, dll).
+      #   Jadi kalau update berikutnya memunculkan package app baru (bukan
+      #   top-level, bukan library), kelas itu ikut tertambah otomatis.
+      #   Catatan penting: filter dex2rs cocok dengan NAMA METHOD, bukan isi
+      #   string di dalam method. Jadi "cari string miku" di sini dipakai
+      #   untuk MENEMUKAN kelasnya, lalu kelasnya yang dimasukkan filter.
+      - name: Cari string True Miku di luar miku.moe.app (+ perluas filter, otomatis)
+        run: |
+          DEXDUMP="$(ls "$ANDROID_HOME"/build-tools/*/dexdump | head -n 1)"
+          echo "dexdump: $DEXDUMP"
+          mkdir -p /tmp/dexdump_miku && cd /tmp/dexdump_miku
+          unzip -o -q "$GITHUB_WORKSPACE/$APK_PATH" 'classes*.dex'
+          cat > /tmp/find_miku.py << 'PYEOF'
+          import re, glob, os, subprocess
+          hdr = re.compile(r"\|\[[0-9a-f]+\]\s+(\S+?)\.([^.:()]+):")
+          s_re = re.compile(r'const-string(?:/jumbo)?\s+\S+,\s+"(.*)"\s+//')
+          cls_re = re.compile(r"Class descriptor\s*:\s*'(L[^']+;)'")
+          LIB_PREFIXES = ("androidx.", "kotlin.", "kotlinx.", "com.google.", "com.android.",
+              "org.jetbrains.", "org.jsoup.", "org.intellij.", "okhttp3.", "okio.",
+              "retrofit2.", "com.bumptech.", "com.github.", "com.squareup.",
+              "io.reactivex.", "java.", "javax.", "j$.", "android.", "com.facebook.",
+              "org.apache.")
+          def is_true_miku(s):
+              low = s.lower()
+              return "miku" in low.replace("komiku", "")
+          def is_library(owner):
+              return owner.startswith(LIB_PREFIXES)
+          def descriptor(owner):
+              return "L" + owner.replace(".", "/") + ";"
+          added = {}; true_miku = []; komiku_only = []; lib_skipped = []
+          for dex in sorted(glob.glob("classes*.dex")):
+              out = subprocess.run(["DEXDUMP", "-d", dex], capture_output=True, text=True, errors="ignore").stdout
+              owner = None; method = None
+              for line in out.splitlines():
+                  if cls_re.search(line): continue
+                  m = hdr.search(line)
+                  if m: owner = m.group(1); method = m.group(2); continue
+                  if "const-string" in line:
+                      mm = s_re.search(line)
+                      if mm and "miku" in mm.group(1).lower():
+                          s = mm.group(1)
+                          slash = owner.replace(".", "/") if owner else ""
+                          if slash.startswith("miku/moe/app/"):
+                              continue
+                          if is_true_miku(s):
+                              if is_library(owner):
+                                  lib_skipped.append((owner, method, s))
+                              else:
+                                  added[owner] = descriptor(owner)
+                                  true_miku.append((owner, method, s))
+                          else:
+                              komiku_only.append((owner, method, s))
+          with open("miku-strings-outside.txt", "w") as f:
+              f.write("Pencarian OTOMATIS True Miku di luar Lmiku/moe/app/ — dari const-string dexdump APK input run ini\n")
+              f.write("Definisi True Miku: string, setelah semua 'komiku' dihapus (lower-case), masih mengandung 'miku'.\n")
+              f.write("Ini mencakup miku_* dan domain *mikumoe*, dan mengecualikan string Komiku murni.\n")
+              f.write(f"Kelas di luar miku.moe.app yang DITAMBAHKAN ke filter: {len(added)}\n")
+              f.write(f"Kelas library yang DILEWATI: {sorted(set(o for o, _, _ in lib_skipped))}\n")
+              f.write(f"Pemakaian Komiku-only yang TIDAK ditambahkan: {len(komiku_only)}\n\n")
+              f.write("== TRUE MIKU — DITAMBAHKAN KE FILTER ==\n")
+              for o, m, s in sorted(set(true_miku)):
+                  f.write(f"{o}#{m} :: {s!r}\n")
+              f.write("\n== KOMIKU-ONLY — TIDAK DITAMBAHKAN (sumber Komiku, bukan brand Miku Moe) ==\n")
+              for o, m, s in sorted(set(komiku_only)):
+                  f.write(f"{o}#{m} :: {s!r}\n")
+              f.write("\n== LIBRARY — DILEWATI ==\n")
+              for o, m, s in sorted(set(lib_skipped)):
+                  f.write(f"{o}#{m} :: {s!r}\n")
+              f.write("\n== DESKRIPTOR KELAS YANG DITAMBAHKAN KE FILTER ==\n")
+              for o in sorted(added):
+                  f.write(f"{added[o]}.*;.*\n")
+          with open(os.path.join(os.environ.get("GITHUB_WORKSPACE", "."), "filter.txt"), "a") as f:
+              f.write("\n# Kelas penemu string True Miku di luar miku.moe.app (dari step cari-string OTOMATIS run ini)\n")
+              for o in sorted(added):
+                  f.write(f"{added[o]}.*;.*\n")
+          print(f"True-Miku owners added: {len(added)}")
+          print(f"library owners skipped: {sorted(set(o for o, _, _ in lib_skipped))}")
+          print(f"true-miku uses: {len(true_miku)}, komiku-only uses: {len(komiku_only)}")
+          PYEOF
+          sed "s|DEXDUMP|$DEXDUMP|" /tmp/find_miku.py > /tmp/find_miku_run.py
+          python3 /tmp/find_miku_run.py
+          cp /tmp/dexdump_miku/miku-strings-outside.txt "$GITHUB_WORKSPACE/miku-strings-outside.txt"
+          echo "--- filter.txt setelah perluasan ---"
+          cat "$GITHUB_WORKSPACE/filter.txt"
+
+      - name: Protect APK dengan dex2rs
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: |
+          dex2rs -i "$APK_PATH" \
+            -o "$OUTPUT_NAME" \
+            -f filter.txt \
+            -p -d -C -k \
+            --abis arm64-v8a,armeabi-v7a \
+            -l mikumoe \
+            -r -c miku.solid.moe
+          ls -lh "$OUTPUT_NAME"
+
+      # Penjelasan flag di atas:
+      #   -p  --obfuscate: enkripsi string + nama reflection
+      #   -d  --dynamic-register: natives didaftar via RegisterNatives
+      #   -C  --compress-libs: deflate .so + set extractNativeLibs=true
+      #   -k  --force-keep-libs: paksa ABI sesuai --abis (wajib di APK ini)
+      #   -l mikumoe: hasil libmikumoe.so
+      #   -r -c miku.solid.moe: paksa loader class custom ini, karena
+      #       APK sudah punya Application sendiri (miku.moe.app.MikuMoeApplication).
+      #       Tanpa -r, dex2rs akan menaruh hook di <clinit> Application
+      #       bawaan dan mengabaikan loader custom.
+
+      - name: Verifikasi hasil (2 lib, 2 ABI)
+        run: |
+          echo "--- libmikumoe.so di APK hasil (harus ada 2 baris) ---"
+          unzip -l "$OUTPUT_NAME" | grep "libmikumoe.so"
+          echo "--- pastikan TIDAK ada lib dari ABI lain yang tidak diminta ---"
+          unzip -l "$OUTPUT_NAME" | grep -E "lib/(arm64-v8a|armeabi-v7a|x86|x86_64)/" || true
+          echo "--- cek signing (debug keystore bawaan dex2rs) ---"
+          APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | head -n 1)"
+          echo "apksigner: $APKSIGNER"
+          "$APKSIGNER" verify --verbose "$OUTPUT_NAME" || true
+
+      - name: Upload APK hasil protect
+        uses: actions/upload-artifact@v4
+        with:
+          name: Miku_Moe-protected-dex2rs
+          path: |
+            ${{ env.OUTPUT_NAME }}
+            miku-strings-outside.txt
+            filter.txt
+          if-no-files-found: error

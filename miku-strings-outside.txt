@@ -1,0 +1,257 @@
+Pencarian OTOMATIS True Miku di luar Lmiku/moe/app/ — dari const-string dexdump APK input run ini
+Definisi True Miku: string, setelah semua 'komiku' dihapus (lower-case), masih mengandung 'miku'.
+Ini mencakup miku_* dan domain *mikumoe*, dan mengecualikan string Komiku murni.
+Kelas di luar miku.moe.app yang DITAMBAHKAN ke filter: 55
+Kelas library yang DILEWATI: ['androidx.room.f']
+Pemakaian Komiku-only yang TIDAK ditambahkan: 69
+
+== TRUE MIKU — DITAMBAHKAN KE FILTER ==
+al#onClick :: 'miku_anime_search_v2'
+al2#onClick :: 'miku_manga_settings'
+ap#a :: 'Miku01v-Animeku-Favorite-Backup'
+ap#a :: 'const MIKU_ANIMEKU_FAVORITES_AES = \\"'
+ap#b :: 'Miku01v-Animeku-Favorite-Backup'
+av1#onCheckedChanged :: 'miku_manga_settings'
+av1#onCheckedChanged :: 'miku_moe_ui_prefs'
+bv1#onCheckedChanged :: 'miku_manga_settings'
+cb2#U :: 'miku_manga_detail_cache'
+cs0#k :: 'https://crash.mikumoe.my.id/report'
+dl2#onCheckedChanged :: 'miku_manga_settings'
+ed2#invoke :: 'miku_manga_history'
+eh2#d :: 'miku_manga_room_migration'
+eh2#j :: 'miku_manga_history'
+eh2#o :: 'miku_manga_history'
+eh2#p :: 'miku_manga_history'
+eh2#t :: 'miku_manga_history'
+eh2#u :: 'miku_manga_history'
+eh2#x :: 'miku_manga_history'
+em2#onClick :: 'miku_manga_search_v2'
+fm2#onClick :: 'miku_manga_search_v2'
+gc2#c :: 'Pictures/MikuMoe'
+gv1#run :: 'miku_manga_detail_cache'
+iv1#onClick :: 'Log Kesalahan Miku Moe'
+iv1#onClick :: 'miku_manga_settings'
+j90#invoke :: 'updateDisplayMode(Lmiku/moe/app/LibraryDisplayMode;)V'
+jg2#onClick :: 'miku_manga_favorite_backup.js'
+l2#j :: 'miku_moe_ui_prefs'
+l2#l :: 'Miku Pink'
+l2#m :: 'miku'
+l2#n :: 'miku'
+l82#a :: 'LOG KESALAHAN - MIKU MOE\\nWaktu: '
+l82#b :: 'LOG KESALAHAN - MIKU MOE\\nWaktu: '
+ll2#b :: 'miku_manga_settings'
+m02#run :: 'miku_manga_detail_cache'
+m70#<init> :: 'miku_manga_settings'
+m80#invoke :: 'updateDisplayMode(Lmiku/moe/app/LibraryDisplayMode;)V'
+mf2#p :: 'miku_detail_chapter_prefs'
+mq#run :: 'miku_manga_update_results'
+nl#Z :: 'miku_anime_search_v2'
+nl#f0 :: 'miku_anime_search_v2'
+np#run :: 'miku_manga_room_migration'
+og2#getView :: 'miku_manga_settings'
+ol#onClick :: 'miku_moe_prefs'
+oo#n :: 'mikumoe'
+oq#run :: 'https://anx.mikumoe.my.id/anx/token'
+qm2#d :: 'android.resource://miku.moe.app/drawable/ic_source_cosmicscans'
+qs2#run :: 'miku_update_activity'
+rl2#f :: 'miku_manga_settings'
+rl2#g :: 'miku_manga_settings'
+s#invoke :: 'miku_manga_settings'
+s80#newThread :: 'MikuBrowseEnrich'
+s80#newThread :: 'MikuBrowsePage'
+s80#newThread :: 'miku-update-io'
+sg2#onClick :: 'miku_manga_history'
+sv1#A0 :: 'miku_manga_settings'
+sv1#C0 :: 'miku_manga_settings'
+sv1#H :: 'miku_manga_settings'
+sv1#l0 :: '/Miku Moe'
+sv1#l0 :: 'Miku Moe'
+sv1#m0 :: 'miku_manga_settings'
+sv1#n0 :: 'miku_manga_settings'
+tb1#onResponse :: 'MikuAja'
+tg2#onErrorResponse :: 'MikuAja'
+tj3#f :: 'miku_manga_settings'
+tz3#onPageFinished :: '(function(){\\n  window.__mikuVideo = \'\';\\n  try {\\n    var html = document.documentElement.innerHTML;\\n    var q = html.indexOf(\'qualityOptions\');\\n    if (q < 0) { window.__mikuVideo = \'ERR:no-quality\'; return; }\\n    var head = html.substring(0, q);\\n    var re = /\\\\\\\\?\\"episodeId\\\\\\\\?\\":\\\\s*(\\\\d+)/g;\\n    var m, last = null;\\n    while ((m = re.exec(head)) !== null) { last = m[1]; }\\n    if (!last) { window.__mikuVideo = \'ERR:no-id\'; return; }\\n    fetch(\'/api/video-mirrors/?e=\' + last, {headers: {\'Accept\': \'application/json\'}})\\n      .then(function(r){ return r.text(); })\\n      .then(function(t){ window.__mikuVideo = \'OK:\' + btoa(unescape(encodeURIComponent(t))); })\\n      .catch(function(e){ window.__mikuVideo = \'ERR:\' + e; });\\n  } catch (e) { window.__mikuVideo = \'ERR:\' + e; }\\n})()'
+uk#Z :: 'mikumoe'
+vb2#g :: 'manga_favorites(miku.moe.app.MangaFavoriteEntity).\\n Expected:\\n'
+vb2#g :: 'manga_history(miku.moe.app.MangaHistoryEntity).\\n Expected:\\n'
+vb2#g :: 'manga_progress(miku.moe.app.MangaProgressEntity).\\n Expected:\\n'
+vz3#run :: "window.__mikuVideo || ''"
+wg0#A0 :: 'miku_manga_settings'
+wg0#B0 :: 'miku_manga_settings'
+wg0#D0 :: 'miku_manga_settings'
+wg0#E0 :: 'miku_manga_settings'
+wg0#F0 :: 'miku_manga_settings'
+wg0#G0 :: 'miku_manga_settings'
+wg0#H0 :: 'miku_manga_settings'
+wg0#S0 :: 'miku_manga_settings'
+wg0#U0 :: 'miku_manga_settings'
+wg0#W0 :: 'miku_manga_settings'
+wg0#X0 :: 'miku_manga_settings'
+wg0#Y0 :: 'miku_manga_settings'
+wg0#Z0 :: 'miku_manga_settings'
+wg0#a0 :: 'miku_manga_settings'
+wg0#a1 :: 'miku_manga_settings'
+wg0#b1 :: 'miku_manga_settings'
+wg0#c0 :: 'miku_manga_settings'
+wg0#i0 :: 'miku_manga_settings'
+wg0#j0 :: 'miku_manga_settings'
+wg0#m0 :: 'miku_manga_settings'
+wg0#n0 :: 'miku_manga_settings'
+wg0#r0 :: 'miku_manga_settings'
+wg0#s0 :: 'miku_manga_settings'
+wg0#t0 :: 'miku_manga_settings'
+wg0#u0 :: 'miku_manga_settings'
+wg0#v0 :: 'miku_manga_settings'
+wg0#w0 :: 'miku_manga_settings'
+wg0#x0 :: 'miku_manga_settings'
+wg0#z0 :: 'miku_manga_settings'
+xc1#onClick :: 'miku_favorite_backup.js'
+xr0#d :: 'Miku Moe'
+xr0#j :: 'Miku Moe 3.7'
+xr0#w :: 'miku.moe.app'
+yb2#onClick :: 'miku_manga_detail_order'
+yf2#run :: 'miku_favorite_refresh'
+ym2#B :: 'miku_manga_update_results'
+ym2#X :: 'miku_manga_update_results'
+ym2#h :: 'miku_manga_update_baseline'
+ys2#onClick :: 'miku_update_activity'
+zc1#a :: 'Miku01v-Favorite-Backup-Key'
+zc1#a :: 'const MIKU_FAVORITES_AES = \\"'
+zc1#c :: 'Miku01v-Favorite-Backup-Key'
+zk#onClick :: 'miku_anime_search_v2'
+zu1#onClick :: 'Berikut terlampir berkas Crash Logging.json dari aplikasi Miku Moe untuk diperiksa oleh developer.'
+zu1#onClick :: 'Laporan Crash Logging - Miku Moe'
+zu1#onClick :: 'https://anx.mikumoe.my.id/'
+zu1#onClick :: 'https://t.me/Miku01v'
+
+== KOMIKU-ONLY — TIDAK DITAMBAHKAN (sumber Komiku, bukan brand Miku Moe) ==
+b5#j :: 'Detail Komiku Asia gagal dibaca'
+b5#j :: 'Komiku'
+b5#k :: 'Detail Komiku Org gagal dibaca'
+b5#k :: 'KomikuOrg'
+b5#run :: 'Chapter Komiku Org gagal dibaca'
+b5#run :: 'KomikuOrg'
+d5#run :: 'Genre Komiku Org gagal dibaca'
+d5#run :: 'KomikuOrg'
+dk2#a :: 'komiku'
+dk2#a :: 'komiku_org'
+dl2#onCheckedChanged :: 'komiku'
+dl2#onCheckedChanged :: 'komiku_org'
+e5#run :: 'Daftar Komiku Org gagal dibaca'
+e5#run :: 'Halaman Komiku Org gagal dibaca'
+e5#run :: 'KomikuOrg'
+f5#run :: 'Gambar chapter Komiku Asia tidak ditemukan'
+f5#run :: 'Halaman Komiku Org gagal dibaca'
+fp1#x :: 'komiku'
+fp1#x :: 'komiku_org'
+g02#run :: 'Chapter Komiku Asia tidak ditemukan pada detail page'
+g02#run :: 'Chapter Komiku Org gagal dibaca'
+g02#run :: 'Daftar Komiku Asia gagal dibaca'
+g02#run :: 'Daftar Komiku Asia gagal dibaca: response berisi data tetapi parser/filter tidak menghasilkan item'
+g02#run :: 'Daftar Komiku Org gagal dibaca'
+g02#run :: 'Data Komiku Org gagal dibaca'
+g02#run :: 'Detail Komiku Asia gagal dibaca'
+g02#run :: 'Detail Komiku Org gagal dibaca'
+g02#run :: 'Genre Komiku Org gagal dibaca'
+js0#run :: 'Daftar Komiku Asia gagal dibaca'
+js0#run :: 'Komiku'
+m90#invoke :: 'komiku_org'
+mf2#B :: 'komiku'
+mf2#B :: 'komiku_org'
+qm2#a :: 'komiku'
+qm2#a :: 'komiku_org'
+qm2#b :: 'komiku'
+qm2#b :: 'komiku_org'
+qm2#d :: 'komiku'
+qm2#d :: 'komiku_org'
+qm2#e :: 'komiku'
+qm2#e :: 'komiku_org'
+qm2#f :: 'Komiku Asia'
+qm2#f :: 'Komiku Org'
+qm2#f :: 'komiku'
+qm2#f :: 'komiku_org'
+rm2#g :: 'komiku'
+rm2#g :: 'komiku.org'
+rm2#g :: 'komiku_org'
+rm2#i :: 'cdnkomiku.xyz'
+rm2#i :: 'content.komiku.me'
+rm2#i :: 'img.komiku.org'
+rm2#i :: 'komiku'
+rm2#i :: 'komiku.ae'
+rm2#i :: 'komiku.asia'
+rm2#i :: 'thumbnail.komiku'
+rm2#i :: 'update.komiku'
+s90#c :: 'komiku'
+s90#c :: 'komiku_org'
+sv1#H :: 'komiku'
+sv1#H :: 'komiku_org'
+u80#run :: 'komiku_org'
+wg0#J0 :: 'komiku'
+wg0#J0 :: 'komiku_org'
+wg0#v0 :: 'http://komiku.org'
+wg0#v0 :: 'https://01.komiku.asia'
+wg0#v0 :: 'https://komiku.org'
+wg0#v0 :: 'komiku'
+wg0#v0 :: 'komiku_org'
+yb2#onClick :: 'komiku'
+
+== LIBRARY — DILEWATI ==
+androidx.room.f#<init> :: 'miku_manga_room.db'
+
+== DESKRIPTOR KELAS YANG DITAMBAHKAN KE FILTER ==
+Lal;.*;.*
+Lal2;.*;.*
+Lap;.*;.*
+Lav1;.*;.*
+Lbv1;.*;.*
+Lcb2;.*;.*
+Lcs0;.*;.*
+Ldl2;.*;.*
+Led2;.*;.*
+Leh2;.*;.*
+Lem2;.*;.*
+Lfm2;.*;.*
+Lgc2;.*;.*
+Lgv1;.*;.*
+Liv1;.*;.*
+Lj90;.*;.*
+Ljg2;.*;.*
+Ll2;.*;.*
+Ll82;.*;.*
+Lll2;.*;.*
+Lm02;.*;.*
+Lm70;.*;.*
+Lm80;.*;.*
+Lmf2;.*;.*
+Lmq;.*;.*
+Lnl;.*;.*
+Lnp;.*;.*
+Log2;.*;.*
+Lol;.*;.*
+Loo;.*;.*
+Loq;.*;.*
+Lqm2;.*;.*
+Lqs2;.*;.*
+Lrl2;.*;.*
+Ls;.*;.*
+Ls80;.*;.*
+Lsg2;.*;.*
+Lsv1;.*;.*
+Ltb1;.*;.*
+Ltg2;.*;.*
+Ltj3;.*;.*
+Ltz3;.*;.*
+Luk;.*;.*
+Lvb2;.*;.*
+Lvz3;.*;.*
+Lwg0;.*;.*
+Lxc1;.*;.*
+Lxr0;.*;.*
+Lyb2;.*;.*
+Lyf2;.*;.*
+Lym2;.*;.*
+Lys2;.*;.*
+Lzc1;.*;.*
+Lzk;.*;.*
+Lzu1;.*;.*

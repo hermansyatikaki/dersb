@@ -1,0 +1,16 @@
+# Filter dex2rs untuk Miku Moe
+# Protect SEMUA kelas dari miku.moe.app
+#
+# Cara kerja filter dex2rs (dari dex2rs/src/filter.rs):
+#   full name = class descriptor + nama method + proto
+#   contoh: Lmiku/moe/app/MainActivity;onCreate(Landroid/os/Bundle;)V
+#   aturan regex dicocokkan dengan pencarian (bukan harus full-match),
+#   aturan ! dicek duluan, <clinit> selalu di-skip, method interface
+#   tidak pernah dikonversi, <init> tidak dikonversi kecuali --allow-init.
+#
+# Aturan di bawah ini saja sudah cukup untuk semua kelas miku.moe.app:
+Lmiku/moe/app/.*;.*
+
+# Kalau nanti app crash di startup, coba tambahkan baris ini (hapus #)
+# untuk mengecualikan Application bawaan dari konversi:
+# !Lmiku/moe/app/MikuMoeApplication;.*
